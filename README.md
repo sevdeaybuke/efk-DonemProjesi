@@ -2,7 +2,8 @@
 
 # EFK 
 cd /efk-docker
-docker-compose up
+
+    docker-compose up
 
 # Web Uygulaması
 
