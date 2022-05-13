@@ -1,7 +1,7 @@
 # DÖNEM PROJESİ
 
 # EFK 
-cd /efk-docker
+    cd /efk-DonemProjesi
 
     docker-compose up
 
