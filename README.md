@@ -65,24 +65,22 @@ Requirements
     Internet connection for downloading maven packages
 
 Compile
-
- mvn install
+    mvn install
 
 Run
-
-java -jar target/mancalaBackend-1.0.jar --server.port=8080
+    java -jar target/mancalaBackend-1.0.jar --server.port=8080
 
 Docker Compile
 
-docker build . -t unlenen/mancala:1.0
+    docker build . -t unlenen/mancala:1.0
 
 Docker Run
 
-docker run --name mancalaServer -d -p 8080:8080 unlenen/mancala:1.0
+    docker run --name mancalaServer -d -p 8080:8080 unlenen/mancala:1.0
 
 Testing
 
-mvn test
+    mvn test
 
 Mancala Frontend Application
 Architecture
