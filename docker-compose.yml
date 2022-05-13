@@ -1,9 +1,9 @@
 version: "2.4"
 services:
     web:
-        image: unlenen/mancala:1.0
+        image: httpd
         ports:
-            - "80:80"
+            - "8080:8080"
         links:
             - fluent-bit
         logging:
