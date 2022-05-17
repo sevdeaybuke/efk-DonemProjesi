@@ -1,16 +1,41 @@
 version: "2.4"
+
+volumes:
+    elastic:
+
 services:
-    web:
-        image: httpd
+    mancala-fe:
+        image: nginx
         ports:
-            - "8080:8080"
+            - "80:80"
         links:
-            - fluent-bit
+            - fluentbit-fe
+        depends_on:
+          - fluentbit-fe
+          - mancala-be
+        volumes:
+            - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+            - ./mancalaGame-mancala/mancalaFrontend:/usr/share/nginx/html
         logging:
             driver: "fluentd"
             options:
-                fluentd-address: localhost:24224
-                tag: httpd.access
+                fluentd-address: localhost:51101
+                tag: fe.app.aybuke
+
+    mancala-be:
+        image: unlenen/mancala:1.0
+        ports:
+            - "8080:8080"
+        links:
+            - fluentbit-be
+        depends_on:
+          - fluentbit-be
+        logging:
+            driver: "fluentd"
+            options:
+                fluentd-address: localhost:51102
+                tag: be.app.aybuke
+
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
         restart: on-failure
@@ -18,17 +43,19 @@ services:
         environment:
           - discovery.type=single-node
         ports:
-          - 9200
+          - 9200:9200
         volumes:
-          - /var/lib/elasticsearch:/usr/share/elasticsearch/data
+          - elastic:/usr/share/elasticsearch/data
         networks:
           - local
         depends_on:
-          - fluent-bit
+          - fluentbit-efk
         logging:
           driver: fluentd
           options:
-            tag: efk.es
+            fluentd-address: localhost:51103
+            tag: efk.aybuke
+
     kibana:
         image: docker.elastic.co/kibana/kibana-oss:7.10.2
         restart: on-failure
@@ -40,13 +67,15 @@ services:
         networks:
           - local
         depends_on:
-          - fluent-bit
+          - fluentbit-efk
           - elasticsearch
         logging:
           driver: fluentd
           options:
-            tag: efk.kibana
-    fluent-bit:
+            fluentd-address: localhost:51103
+            tag: kibana.aybuke
+
+    fluentbit-fe:
         image: fluent/fluent-bit:1.8
         command:
           - /fluent-bit/bin/fluent-bit
@@ -55,17 +84,44 @@ services:
           - FLB_ES_HOST=elasticsearch
           - FLB_ES_PORT=9200
         ports:
-          #- 2020:2020
-          - 24224:24224
+          - 51101:24224
+
         volumes:
           - ./conf/:/etc/fluent-bit/:ro
         networks:
           - local
-        logging:
-          driver: fluentd
-          options:
-            tag: efk.fluent-bit
+
+    fluentbit-be:
+        image: fluent/fluent-bit:1.8
+        command:
+          - /fluent-bit/bin/fluent-bit
+          - --config=/etc/fluent-bit/fluent-bit.conf
+        environment:
+          - FLB_ES_HOST=elasticsearch
+          - FLB_ES_PORT=9200
+        ports:
+          - 51102:24224
+        volumes:
+          - ./conf/:/etc/fluent-bit/:ro
+        networks:
+          - local
+
+    fluentbit-efk:
+        image: fluent/fluent-bit:1.8
+        command:
+          - /fluent-bit/bin/fluent-bit
+          - --config=/etc/fluent-bit/fluent-bit.conf
+        environment:
+          - FLB_ES_HOST=elasticsearch
+          - FLB_ES_PORT=9200
+        ports:
+          - 51103:24224
+        volumes:
+          - ./conf/:/etc/fluent-bit/:ro
+        networks:
+          - local
         
 networks:
   local:
     driver: bridge
+

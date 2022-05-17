@@ -1,4 +1,4 @@
-URL_MANCALA_API = "http://localhost:8080/mancala/v1"
+URL_MANCALA_API = "http://192.168.231.225:8080/mancala/v1"
 
 
 mancalaGameInfo = {
