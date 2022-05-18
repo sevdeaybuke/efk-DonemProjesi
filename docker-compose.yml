@@ -125,9 +125,6 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.1.0
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -167,8 +164,6 @@ services:
     image: prom/alertmanager
     ports:
       - 9093:9093
-    volumes:
-      - ./alertmanager/:/etc/alertmanager/
     networks:
       - back-tier
     restart: always
@@ -187,9 +182,6 @@ services:
       - prometheus
     ports:
       - 3000:3000
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
     env_file:
       - ./grafana/config.monitoring
     networks:
