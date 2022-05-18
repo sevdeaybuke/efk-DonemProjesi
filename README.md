@@ -4,6 +4,10 @@
     cd /efk-DonemProjesi
 
     docker-compose up
+!    static_configs:
+      - targets: ['192.168.231.94:9100'] bu ip değiştirmeyi unutma  /prometheus/prometheus.yml
+    
+    
 
 # Web Uygulaması
 
