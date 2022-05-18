@@ -1,127 +1,206 @@
 version: "2.4"
 
 volumes:
-    elastic:
+  elastic:
+  prometheus_data: {}
+  grafana_data: {}
 
 services:
-    mancala-fe:
-        image: nginx
-        ports:
-            - "80:80"
-        links:
-            - fluentbit-fe
-        depends_on:
-          - fluentbit-fe
-          - mancala-be
-        volumes:
-            - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
-            - ./mancalaGame-mancala/mancalaFrontend:/usr/share/nginx/html
-        logging:
-            driver: "fluentd"
-            options:
-                fluentd-address: localhost:51101
-                tag: fe.app.aybuke
+  mancala-fe:
+    image: nginx
+    ports:
+      - "80:80"
+    links:
+      - fluentbit-fe
+    depends_on:
+      - fluentbit-fe
+      - mancala-be
+    volumes:
+      - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./mancalaGame-mancala/mancalaFrontend:/usr/share/nginx/html
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:51101
+        tag: fe.app.aybuke
 
-    mancala-be:
-        image: unlenen/mancala:1.0
-        ports:
-            - "8080:8080"
-        links:
-            - fluentbit-be
-        depends_on:
-          - fluentbit-be
-        logging:
-            driver: "fluentd"
-            options:
-                fluentd-address: localhost:51102
-                tag: be.app.aybuke
+  mancala-be:
+    image: unlenen/mancala:1.0
+    ports:
+      - "8080:8080"
+    links:
+      - fluentbit-be
+    depends_on:
+      - fluentbit-be
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:51102
+        tag: be.app.aybuke
 
-    elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
-        restart: on-failure
-        mem_limit: 2g
-        environment:
-          - discovery.type=single-node
-        ports:
-          - 9200:9200
-        volumes:
-          - elastic:/usr/share/elasticsearch/data
-        networks:
-          - local
-        depends_on:
-          - fluentbit-efk
-        logging:
-          driver: fluentd
-          options:
-            fluentd-address: localhost:51103
-            tag: efk.aybuke
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+    restart: on-failure
+    mem_limit: 2g
+    environment:
+      - discovery.type=single-node
+    ports:
+      - 9200:9200
+    volumes:
+      - elastic:/usr/share/elasticsearch/data
+    networks:
+      - local
+    depends_on:
+      - fluentbit-efk
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:51103
+        tag: efk.aybuke
 
-    kibana:
-        image: docker.elastic.co/kibana/kibana-oss:7.10.2
-        restart: on-failure
-        mem_limit: 256m
-        environment:
-          - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-        ports:
-          - 5601:5601
-        networks:
-          - local
-        depends_on:
-          - fluentbit-efk
-          - elasticsearch
-        logging:
-          driver: fluentd
-          options:
-            fluentd-address: localhost:51103
-            tag: kibana.aybuke
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:7.10.2
+    restart: on-failure
+    mem_limit: 256m
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    networks:
+      - local
+    depends_on:
+      - fluentbit-efk
+      - elasticsearch
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:51103
+        tag: kibana.aybuke
 
-    fluentbit-fe:
-        image: fluent/fluent-bit:1.8
-        command:
-          - /fluent-bit/bin/fluent-bit
-          - --config=/etc/fluent-bit/fluent-bit.conf
-        environment:
-          - FLB_ES_HOST=elasticsearch
-          - FLB_ES_PORT=9200
-        ports:
-          - 51101:24224
+  fluentbit-fe:
+    image: fluent/fluent-bit:1.8
+    command:
+      - /fluent-bit/bin/fluent-bit
+      - --config=/etc/fluent-bit/fluent-bit.conf
+    environment:
+      - FLB_ES_HOST=elasticsearch
+      - FLB_ES_PORT=9200
+    ports:
+      - 51101:24224
 
-        volumes:
-          - ./conf/:/etc/fluent-bit/:ro
-        networks:
-          - local
+    volumes:
+      - ./conf/:/etc/fluent-bit/:ro
+    networks:
+      - local
 
-    fluentbit-be:
-        image: fluent/fluent-bit:1.8
-        command:
-          - /fluent-bit/bin/fluent-bit
-          - --config=/etc/fluent-bit/fluent-bit.conf
-        environment:
-          - FLB_ES_HOST=elasticsearch
-          - FLB_ES_PORT=9200
-        ports:
-          - 51102:24224
-        volumes:
-          - ./conf/:/etc/fluent-bit/:ro
-        networks:
-          - local
+  fluentbit-be:
+    image: fluent/fluent-bit:1.8
+    command:
+      - /fluent-bit/bin/fluent-bit
+      - --config=/etc/fluent-bit/fluent-bit.conf
+    environment:
+      - FLB_ES_HOST=elasticsearch
+      - FLB_ES_PORT=9200
+    ports:
+      - 51102:24224
+    volumes:
+      - ./conf/:/etc/fluent-bit/:ro
+    networks:
+      - local
 
-    fluentbit-efk:
-        image: fluent/fluent-bit:1.8
-        command:
-          - /fluent-bit/bin/fluent-bit
-          - --config=/etc/fluent-bit/fluent-bit.conf
-        environment:
-          - FLB_ES_HOST=elasticsearch
-          - FLB_ES_PORT=9200
-        ports:
-          - 51103:24224
-        volumes:
-          - ./conf/:/etc/fluent-bit/:ro
-        networks:
-          - local
-        
+  fluentbit-efk:
+    image: fluent/fluent-bit:1.8
+    command:
+      - /fluent-bit/bin/fluent-bit
+      - --config=/etc/fluent-bit/fluent-bit.conf
+    environment:
+      - FLB_ES_HOST=elasticsearch
+      - FLB_ES_PORT=9200
+    ports:
+      - 51103:24224
+    volumes:
+      - ./conf/:/etc/fluent-bit/:ro
+    networks:
+      - local
+
+  prometheus:
+    image: prom/prometheus:v2.1.0
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    ports:
+      - 9090:9090
+    links:
+      - alertmanager:alertmanager
+    #      - pushgateway:pushgateway
+    networks:
+      - back-tier
+    restart: always
+  #    deploy:
+  #      placement:
+  #        constraints:
+  #          - node.hostname == ${HOSTNAME}
+
+  node-exporter:
+    image: prom/node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    ports:
+      - 9100:9100
+    networks:
+      - back-tier
+    restart: always
+
+  alertmanager:
+    image: prom/alertmanager
+    ports:
+      - 9093:9093
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/
+    networks:
+      - back-tier
+    restart: always
+    command:
+      - "--config.file=/etc/alertmanager/config.yml"
+      - "--storage.path=/alertmanager"
+  #    deploy:
+  #      placement:
+  #        constraints:
+  #          - node.hostname == ${HOSTNAME}
+
+  grafana:
+    image: grafana/grafana
+    user: "472"
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    env_file:
+      - ./grafana/config.monitoring
+    networks:
+      - back-tier
+      - front-tier
+    restart: always
+
 networks:
+  front-tier:
+  back-tier:
   local:
     driver: bridge
+
 
