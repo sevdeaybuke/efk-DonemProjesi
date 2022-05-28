@@ -1,4 +1,4 @@
-# EFK (Elasticsearch-Fluentd-Kibana) Yöntemi ile Web Uygulamalarının Performans Analizi
+# EFK (Elasticsearch-Fluentd-Kibana) Yöntemi ile Bir Web Uygulamasının Performans Analizi
 
 Bir web uygulaması kullanılmaya başlandığında; sistemde ve ağda meydana gelen 
 olayların takibini kolaylaştırmak, analizini yapmak ve verimli şekilde kaynak tüketebilmeyi 
